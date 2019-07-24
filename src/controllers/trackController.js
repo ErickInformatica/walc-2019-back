@@ -24,7 +24,7 @@ function addtracks(req, res) {
     var track = new Track();
     var params = req.body;
 
-    if(params.titulo && params.descripcion){
+    if(params.titulo){
         track.titulo = params.titulo;
         track.descripcion.subIndice = params.subIndice;
         track.descripcion.subDescripcion = params.subDescripcion
