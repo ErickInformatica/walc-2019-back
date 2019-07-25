@@ -7,7 +7,6 @@ const bodyParser = require("body-parser");
 
 //CARGAR RUTAS
 var user_routes = require('./routes/userRoutes');
-var track_routes = require('./routes/trackRoutes');
 
 //MIDDLEWARES
 app.use(bodyParser.urlencoded({ extended: false}));
@@ -24,7 +23,7 @@ app.use((req, res, next) => {
 });
 
 //RUTAS
-app.use('/api', user_routes, track_routes);
+app.use('/api', user_routes);
 
 //EXPORTAR
 module.exports = app;
