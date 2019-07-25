@@ -5,7 +5,8 @@ var UserController = require('../controllers/userController');
 var conferenciaController = require('../controllers/conferenciaController');
 var TrackController = require('../controllers/trackController');
 var PatrocinadorController = require('../controllers/patrocinadorController');
-var md_auth = require('../middlewares/autheticated');
+var AntecedenteController = require('../controllers/antecedenteController');
+var md_auth = require('../middlewares/authenticated');
 
 //SUBIR IMAGEN
 var multiparty = require('connect-multiparty');
@@ -34,8 +35,9 @@ api.post('/conferencia/registrar', conferenciaController.registrarCharla);
 api.post('/subir-imagen-usuario/:id', [md_auth.ensureAuth, md_subirConf], conferenciaController.subirImagen);
 api.get('/obtener-imagen-usuario/:nombreImagen', conferenciaController.obtenerImagen)
 api.put('/conferencia/editar/:id', md_auth.ensureAuth, conferenciaController.editarCharla)
-api.put('/conferencia/preregistrarse/:id/:user', md_auth.ensureAuth, conferenciaController.interesados)
-api.put('/conferencia/registrarse/:id/:user', md_auth.ensureAuth, conferenciaController.preregistrarEnCharla)
+api.put('/conferencia/interesado/:id', md_auth.ensureAuth, conferenciaController.interesadosEnCharla)
+api.put('/conferencia/inscribir/:id/:user', md_auth.ensureAuth, conferenciaController.inscribirEnCharla)
+api.put('/conferencia/preinscribir/:id/:user', md_auth.ensureAuth, conferenciaController.preinscribirEnCharla)
 api.put('/conferencia/registrado/:id/:color/:user', md_auth.ensureAuth, conferenciaController.cambiarColor)
 api.delete('/conferencia/eliminar/:id', md_auth.ensureAuth, conferenciaController.eliminarCharla)
     //Track
@@ -50,4 +52,12 @@ api.get('/patrocinador/get/all', PatrocinadorController.getPatrocinadores)
 api.put('/patrocinador/upadte/:id', PatrocinadorController.updatePatrocinador)
 api.delete('/patrocinador/delete/:id', PatrocinadorController.deletePatrocinador)
 api.post('/patrocinador/add', PatrocinadorController.addPatrocinador)
+    //Antecedente
+api.post('/add-antecedente', AntecedenteController.agregarAntecedente);
+api.put('/editar-antecedente/:id', AntecedenteController.editarAntecedente);
+api.delete('/eliminar-antecedente/:id', AntecedenteController.eliminarAntecedente);
+api.get('/listar-antecedente/:id', AntecedenteController.listarId)
+api.get('/listar', AntecedenteController.listar)
+
+
 module.exports = api;
