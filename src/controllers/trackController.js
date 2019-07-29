@@ -2,8 +2,10 @@
 
 var Track = require('../models/track');
 
+var Conferencias = require('../models/conferencia');
+
 function gettracks(req, res) {
-    Track.find().exec((err, tracks)=>{
+    Conferencias.find().exec((err, tracks)=>{
         if(err) return res.status(500).send({message: 'error en track'})
         if(!tracks) return res.status(400).send({message: 'error al listar las tracks'})
 
@@ -13,7 +15,7 @@ function gettracks(req, res) {
 
 function gettrack(req, res) {
     var trackId = req.params.id;
-    Track.findById(trackId, (err, track)=>{
+    Conferencias.findById(trackId, (err, track)=>{
         if(err) return res.status(500).send({message: 'error en la track'})
         if(!track) return res.status(400).send({message: 'error al listar la track'})
         return res.status(200).send({track})

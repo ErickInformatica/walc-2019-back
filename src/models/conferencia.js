@@ -4,13 +4,26 @@ var mongoose = require("mongoose");
 var Schema = mongoose.Schema;
 
 var ConferenciaSchema = Schema({
-    nombreCharla: String,
-    descripcion: String,
-    comunicador: String,
-    salon: String,
-    hora: String,
-    fecha: String,
-    image: String,
+    titulo: String,
+    descripcion: [{
+        subIndice: String,
+        subDescripcion: String
+    }],
+    temas: String,
+    objetivos: String,
+    objetivoGeneral: String,
+    dirigidoA: String,
+    preRequisitos: String,
+    materiales: String,
+    metodologia: String,
+    instructores: String,
+    cupo: String,
+    duracion: String,
+    agenda: [{
+        dia: String,
+        descripcionDia: String
+    }],
+    imagen: String,
     interesados: [{ type: Schema.ObjectId, ref: "User" }],
     preinscritos: [{ type: Schema.ObjectId, ref: "User" }],
     inscritos: [{

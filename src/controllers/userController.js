@@ -56,6 +56,65 @@ function registrar(req, res) {
 
 }
 
+function registrarYSeguir(req, res) {
+  var user = new User();
+  var params = req.body;
+  var conferenciaId = req.params.id
+
+  if (params.nombre && params.email && params.password) {
+      user.nombre = params.nombre;
+      user.email = params.email;
+      user.telefono = params.telefono;
+      user.sexo = params.sexo;
+      user.profesion = params.profesion;
+      user.empresa = params.empresa;
+      user.rol = 'ROLE_USUARIO';
+      user.image = null;
+
+
+      User.find({
+          $or: [
+              { email: user.email.toLowerCase() },
+          ]
+      }).exec((err, users) => {
+          if (err) return res.status(500).send({ message: 'Error en la peticion de usuarios' });
+
+          if (users && users.length >= 1) {
+              return res.status(500).send({ message: 'El usuario ya existe' });
+          } else {
+              bcrypt.hash(params.password, null, null, (err, hash) => {
+                  user.password = hash;
+
+                  user.save((err, userStored) => {
+                      if (err) return res.status(500).send({ message: 'Error al guardar el usuario' });
+
+                      if (userStored) {
+                        console.log(userStored);
+                        
+
+                        Conferencia.findByIdAndUpdate(conferenciaId, {$addToSet:{interesados: userStored._id}}, {new:true}, (err, confUpdate)=>{
+                          if (err) return res.status(500).send({ message: 'error en la peticion' });
+
+                          if (!confUpdate) return res.status(404).send({ message: 'no se ha podido generar una inscripcion' });
+
+                          return res.status(200).send({ message: 'Ha marcado interés en este evento' });
+                        })
+
+                      } else {
+                          res.status(404).send({ message: 'no se ha registrado el usuario' });
+                      }
+                  });
+              });
+          }
+      });
+  } else {
+      res.status(200).send({
+          message: 'Rellene todos los datos necesarios'
+      });
+  }
+
+}
+
 function getUser(req, res) {
     var userId = req.params.id;
 
@@ -469,11 +528,11 @@ function verificarEmail(req, res) {
 function misConferencias(req, res) {
     var userId = req.user.sub
 
-    Conferencia.find({ registrados: { $elemMatch: { user: userId } } }, (err, enc) => {
+    Conferencia.find({ interesados: userId}, (err, enc) => {
         if (err) return res.status(500).send({ message: 'error en la petición' });
         if (!enc) return res.status(404).send({ message: 'no te has registrado a alguna conferencia ' });
 
-        return res.status(200).send({ message: enc })
+        return res.status(200).send({ conferencias: enc })
     })
 }
 
@@ -500,5 +559,6 @@ module.exports = {
     getUsers,
     verificarEmail,
     eliminarUsuario,
-    misConferencias
+    misConferencias,
+    registrarYSeguir
 }

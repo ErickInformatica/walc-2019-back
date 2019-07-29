@@ -9,7 +9,7 @@ function agregarAntecedente(req,res){
     var antecedente = new Antecedente();
     var params = req.body;
 
-    if(params.edicion && params.lugar && params.descripcion){
+    if(params.edicion && params.descripcion){
 
         antecedente.edicion = params.edicion;
         antecedente.lugar = params.lugar;

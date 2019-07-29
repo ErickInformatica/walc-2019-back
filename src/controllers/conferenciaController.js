@@ -101,7 +101,26 @@ function buscarCharlaId(req, res) {
 
 function interesadosEnCharla(req, res) {
     var charlaId = req.params.id;
-    var userId = req.user.sub
+    var userId = req.user.sub    
+
+    Charla.find().exec((err, enc)=>{
+        for (let o = 0; o < enc.length; o++) {
+            for (let i = 0; i < enc[o].interesados.length; i++) {    
+                if(enc[o].interesados[i] == userId){                                        
+                    return res.status(200).send({ message: 'ya esta interesado en otro evento' });
+                }            
+            }
+            for (let i = 0; i < enc[o].preinscritos.length; i++) {
+                if(enc[o].preinscritos[i] == userId){
+                    return res.status(200).send({ message: 'ya esta preinscrito en otro evento' });
+                }            
+            }
+            for (let i = 0; i < enc[o].inscritos.length; i++) {
+                if(enc[o].inscritos[i].user == userId){
+                    return res.status(200).send({ message: 'ya esta inscrito en otro evento' });
+                }            
+            }
+        }
 
     Charla.findById(charlaId, (err, enc) => {
 
@@ -110,23 +129,20 @@ function interesadosEnCharla(req, res) {
 
         for (let i = 0; i < enc.interesados.length; i++) {
             if (enc.interesados[i] == userId) {
-                return res.status(200).send({ message: 'ya esta inscrito a este evento' });
+                return res.status(200).send({ message: 'ya esta interesado en este evento' });
             }
         } //eslte for se encarga de buscar si el usuario ya se preregistro con anterioridad
 
         Charla.findOne({
             _id: charlaId,
-            $or: {
-                preinscritos: { $elemMatch: { user: userId } },
-                inscritos: { $elemMatch: { user: userId } }
-            }
+            preinscritos: { $elemMatch: { user: userId } }
         }, (err, userEnc) => {
             //este .findOne se encarga de buscar si el usuario ya esta registrado,
             //para no volver a preregistrarse
 
             if (err) return res.status(500).send({ message: 'error en la peticion' });
 
-            if (userEnc) return res.status(404).send({ message: 'ya esta inscrito a este evento' });
+            if (userEnc) return res.status(404).send({ message: 'ya esta preinscrito a este evento' });
             //el if de arriba manda mensaje en caso de que el usuario ya este registrado al evento
 
             //el findByIdAndUpdate solo se generara si no existe tu usuario dentro de ese evento
@@ -139,12 +155,32 @@ function interesadosEnCharla(req, res) {
             })
         })
     })
+    
+})
 }
 
 function preinscribirEnCharla(req, res) {
     var charlaId = req.params.id;
     var userId = req.params.user
 
+    Charla.find().exec((err, enc)=>{
+        for (let o = 0; o < enc.length; o++) {
+            for (let i = 0; i < enc[o].interesados.length; i++) {    
+                if(enc[o].interesados[i] == userId){                                        
+                    return res.status(200).send({ message: 'ya esta interesado en otro evento' });
+                }            
+            }
+            for (let i = 0; i < enc[o].preinscritos.length; i++) {
+                if(enc[o].preinscritos[i] == userId){
+                    return res.status(200).send({ message: 'ya esta preinscrito en otro evento' });
+                }            
+            }
+            for (let i = 0; i < enc[o].inscritos.length; i++) {
+                if(enc[o].inscritos[i].user == userId){
+                    return res.status(200).send({ message: 'ya esta inscrito en otro evento' });
+                }            
+            }
+        }
     Charla.findById(charlaId, (err, enc) => {
 
         if (err) return res.status(500).send({ message: 'error en la peticion' });
@@ -158,24 +194,16 @@ function preinscribirEnCharla(req, res) {
             }
         } //este for se encarga de buscar si el usuario este interesado con anterioridad
 
-        Charla.findOne({ _id: charlaId, preinscritos: { $elemMatch: { user: userId } } }, (err, userEnc) => {
-            //este .findOne se encarga de buscar si el usuario ya esta registrado,
-            //para no volver a preregistrarse
 
+        //el findByIdAndUpdate solo se generara si no existe tu usuario dentro de ese evento
+        Charla.findByIdAndUpdate(charlaId, { $addToSet: { preinscritos: userId }, $pull: { interesados: userId } }, { new: true }, (err, newOcupado) => {
             if (err) return res.status(500).send({ message: 'error en la peticion' });
 
-            if (userEnc) return res.status(404).send({ message: 'ya esta inscrito a este evento' });
-            //el if de arriba manda mensaje en caso de que el usuario ya este registrado al evento
+            if (!newOcupado) return res.status(404).send({ message: 'no se ha podido generar una inscripcion' });
 
-            //el findByIdAndUpdate solo se generara si no existe tu usuario dentro de ese evento
-            Charla.findByIdAndUpdate(charlaId, { $addToSet: { preinscritos: userId }, $pull: { interesado: userId } }, { new: true }, (err, newOcupado) => {
-                if (err) return res.status(500).send({ message: 'error en la peticion' });
-
-                if (!newOcupado) return res.status(404).send({ message: 'no se ha podido generar una inscripcion' });
-
-                return res.status(200).send({ message: 'Ha marcado interés en este evento' });
-            })
+            return res.status(200).send({ message: 'Ahora está preinscrito en este evento' });
         })
+    })
     })
 }
 
@@ -183,6 +211,24 @@ function inscribirEnCharla(req, res) {
     var charlaId = req.params.id;
     var userId = req.params.user
 
+    Charla.find().exec((err, enc)=>{
+        for (let o = 0; o < enc.length; o++) {
+            for (let i = 0; i < enc[o].interesados.length; i++) {    
+                if(enc[o].interesados[i] == userId){                                        
+                    return res.status(200).send({ message: 'ya esta interesado en otro evento' });
+                }            
+            }
+            for (let i = 0; i < enc[o].preinscritos.length; i++) {
+                if(enc[o].preinscritos[i] == userId){
+                    return res.status(200).send({ message: 'ya esta preinscrito en otro evento' });
+                }            
+            }
+            for (let i = 0; i < enc[o].inscritos.length; i++) {
+                if(enc[o].inscritos[i].user == userId){
+                    return res.status(200).send({ message: 'ya esta inscrito en otro evento' });
+                }            
+            }
+        }
     Charla.findById(charlaId, (err, enc) => {
 
         if (err) return res.status(500).send({ message: 'error en la peticion' });
@@ -208,7 +254,7 @@ function inscribirEnCharla(req, res) {
             //el findByIdAndUpdate solo se generara si no existe tu usuario dentro de ese evento
             Charla.findByIdAndUpdate(charlaId, {
                 $push: { //Lo que hace esto, es agregar al usuario con el color predeterminado blanco en su carnet
-                    preinscritos: {
+                    inscritos: {
                         user: userId,
                         color: 'White'
                     }
@@ -223,6 +269,7 @@ function inscribirEnCharla(req, res) {
             })
         })
     })
+})
 }
 
 function cambiarColor(req, res) {
@@ -231,9 +278,9 @@ function cambiarColor(req, res) {
     var userId = req.params.user
 
     Charla.findOneAndUpdate({ _id: charlaId, registrados: { $elemMatch: { user: userId } } }, { "registrados.$.color": req.params.color }, { new: true }, (err, usuarioActualizado) => {
-        if (err) return res.status(500).send({ message: 'error en la peticion de aumentar candidad a producto de usuario' })
+        if (err) return res.status(500).send({ message: 'error en la peticion de cambiar color de usuario' })
 
-        if (!usuarioActualizado) return res.status(200).send({ message: 'No se ha registrado en esta charla' })
+        if (!usuarioActualizado) return res.status(200).send({ message: 'No se ha cambiado color' })
 
         return res.status(200).send({ usuario: usuarioActualizado })
     })
@@ -293,6 +340,16 @@ function obtenerImagen(req, res) {
     });
 }
 
+function inscritosPorColor(req, res) {
+    Charla.find({}, { inscritos: 1, nombreCharla: 1 }).sort({ "inscritos": 1 }).populate('inscritos.user').exec((err, enc) => {
+        if (err) return res.status(500).send({ message: 'error en la peticion' })
+
+        if (!enc) return res.status(200).send({ message: 'No encontrado' })
+
+        return res.status(200).send({ message: enc })
+    })
+}
+
 
 module.exports = {
     registrarCharla,
@@ -306,4 +363,5 @@ module.exports = {
     cambiarColor,
     subirImagen,
     obtenerImagen,
+    inscritosPorColor
 }

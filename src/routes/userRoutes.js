@@ -12,6 +12,7 @@ var md_auth = require('../middlewares/authenticated');
 var multiparty = require('connect-multiparty');
 var md_subirUser = multiparty({ uploadDir: './src/uploads/users' })
 var md_subirConf = multiparty({ uploadDir: './src/uploads/conferencias' })
+var md_subirPatr = multiparty({ uploadDir: './src/uploads/sponsor' })
 
 
 //Rutas
@@ -20,8 +21,9 @@ var api = express.Router();
 //Usuarios
 api.get('/usario/:id', md_auth.ensureAuth, UserController.getUser);
 api.get('/usuarios', UserController.getUsers);
-api.get('/conferencias', md_auth.ensureAuth, UserController.editarUsuario)
+api.get('/conferencias', md_auth.ensureAuth, UserController.misConferencias)
 api.post('/registrar', UserController.registrar);
+api.post('/registrarYSeguir/:id', UserController.registrarYSeguir);
 api.post('/login', UserController.login);
 api.post('/subir-imagen-usuario/:id', [md_auth.ensureAuth, md_subirUser], UserController.subirImagen);
 api.get('/obtener-imagen-usuario/:nombreImagen', UserController.obtenerImagen)
@@ -30,14 +32,15 @@ api.put('/email/:correo/:codigo', UserController.verificarEmail)
 api.delete('/eliminar/:id', md_auth.ensureAuth, UserController.eliminarUsuario)
     //Conferencias
 api.get('/conferencia/listarAll', conferenciaController.listarCharlas);
+api.get('/conferencia/listarColor', conferenciaController.inscritosPorColor);
 api.get('/conferencia/buscar/:id', conferenciaController.buscarCharlaId)
 api.post('/conferencia/registrar', conferenciaController.registrarCharla);
-api.post('/subir-imagen-usuario/:id', [md_auth.ensureAuth, md_subirConf], conferenciaController.subirImagen);
-api.get('/obtener-imagen-usuario/:nombreImagen', conferenciaController.obtenerImagen)
+api.post('/subir-imagen-conferencia/:id', [md_auth.ensureAuth, md_subirConf], conferenciaController.subirImagen);
+api.get('/obtener-imagen-conferencia/:nombreImagen', conferenciaController.obtenerImagen)
 api.put('/conferencia/editar/:id', md_auth.ensureAuth, conferenciaController.editarCharla)
-api.put('/conferencia/interesado/:id', md_auth.ensureAuth, conferenciaController.interesadosEnCharla)
-api.put('/conferencia/inscribir/:id/:user', md_auth.ensureAuth, conferenciaController.inscribirEnCharla)
-api.put('/conferencia/preinscribir/:id/:user', md_auth.ensureAuth, conferenciaController.preinscribirEnCharla)
+api.post('/conferencia/interesado/:id', md_auth.ensureAuth, conferenciaController.interesadosEnCharla)
+api.post('/conferencia/inscribir/:id/:user', md_auth.ensureAuth, conferenciaController.inscribirEnCharla)
+api.post('/conferencia/preinscribir/:id/:user', md_auth.ensureAuth, conferenciaController.preinscribirEnCharla)
 api.put('/conferencia/registrado/:id/:color/:user', md_auth.ensureAuth, conferenciaController.cambiarColor)
 api.delete('/conferencia/eliminar/:id', md_auth.ensureAuth, conferenciaController.eliminarCharla)
     //Track
@@ -52,12 +55,14 @@ api.get('/patrocinador/get/all', PatrocinadorController.getPatrocinadores)
 api.put('/patrocinador/upadte/:id', PatrocinadorController.updatePatrocinador)
 api.delete('/patrocinador/delete/:id', PatrocinadorController.deletePatrocinador)
 api.post('/patrocinador/add', PatrocinadorController.addPatrocinador)
+api.post('/subir-imagen-patrocinador/:id', [md_auth.ensureAuth, md_subirPatr], PatrocinadorController.subirImagen);
+api.get('/obtener-imagen-patrocinador/:nombreImagen', PatrocinadorController.obtenerImagen)
     //Antecedente
 api.post('/add-antecedente', AntecedenteController.agregarAntecedente);
 api.put('/editar-antecedente/:id', AntecedenteController.editarAntecedente);
 api.delete('/eliminar-antecedente/:id', AntecedenteController.eliminarAntecedente);
 api.get('/listar-antecedente/:id', AntecedenteController.listarId)
-api.get('/listar', AntecedenteController.listar)
+api.get('/listar-antecendente', AntecedenteController.listar);
 
 
 module.exports = api;
