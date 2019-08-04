@@ -28,6 +28,7 @@ var ConferenciaSchema = Schema({
     preinscritos: [{ type: Schema.ObjectId, ref: "User" }],
     inscritos: [{
         user: { type: Schema.ObjectId, ref: "User" },
+        track: { type: Schema.ObjectId, ref: "Conferencia" },
         color: String
     }]
 });

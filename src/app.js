@@ -7,7 +7,7 @@ const bodyParser = require("body-parser");
 
 //CARGAR RUTAS
 var user_routes = require('./routes/userRoutes');
-
+var s3_routes = require('./routes/s3.router');
 //MIDDLEWARES
 app.use(bodyParser.urlencoded({ extended: false}));
 app.use(bodyParser.json());
@@ -23,7 +23,7 @@ app.use((req, res, next) => {
 });
 
 //RUTAS
-app.use('/api', user_routes);
+app.use('/api', user_routes, s3_routes);
 
 //EXPORTAR
 module.exports = app;

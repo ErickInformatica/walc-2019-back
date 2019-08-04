@@ -8,6 +8,18 @@ var path = require('path');
 var fs = require('fs');
 const nodemailer = require('nodemailer');
 
+function editSaldo(req, res) {
+  var idUser = req.params.idUser
+  console.log(req.body);
+  
+  User.findByIdAndUpdate(idUser, {saldo: req.body.saldo}, (err, userUpd)=>{
+    if (err) return res.status(500).send({ message: 'error en la peticion' });
+    if (!userUpd) return res.status(404).send({ message: 'no se ha podido generar el cambio de saldo' });
+    return res.status(200).send({ message: 'Monto Pagado Modificado' });
+    
+  })
+}
+
 function registrar(req, res) {
     var user = new User();
     var params = req.body;
@@ -19,7 +31,11 @@ function registrar(req, res) {
         user.sexo = params.sexo;
         user.profesion = params.profesion;
         user.empresa = params.empresa;
+        user.interesados = params.interesado
+        user.preinscrito = params.preinscrito
+        user.inscrito= params.inscrito
         user.rol = 'ROLE_USUARIO';
+        user.saldo = 0
         user.image = null;
 
 
@@ -60,21 +76,80 @@ function registrarYSeguir(req, res) {
   var user = new User();
   var params = req.body;
   var conferenciaId = req.params.id
+  if(req.user){
+    return res.status(500).send({ message: 'ya se encuentra asignado a un track' });
+  }
+  var fechaNacimientoYear = `${params.fechaNacimiento.year}/${params.fechaNacimiento.month}/${params.fechaNacimiento.day}`
+  var fechaNacimientoMonth
+  var fechaNacimientoDay
+  console.log(fechaNacimientoYear);
+  
 
-  if (params.nombre && params.email && params.password) {
-      user.nombre = params.nombre;
-      user.email = params.email;
-      user.telefono = params.telefono;
-      user.sexo = params.sexo;
-      user.profesion = params.profesion;
-      user.empresa = params.empresa;
-      user.rol = 'ROLE_USUARIO';
-      user.image = null;
-
+  if (params.emailPersonal && params.password) {
+    user.primerApellido = params.primerApellido
+    user.segundoApellido = params.segundoApellido
+    user.primerNombre = params.primerNombre
+    user.segundoNombre = params.segundoNombre
+    user.sexo = params.sexo
+    user.paisNacimiento = params.paisNacimiento
+    user.ciudadNacimiento = params.ciudadNacimiento
+    user.fechaNacimiento = fechaNacimientoYear
+    user.paisNacionalidad = params.paisNacionalidad
+    user.tipoDocumentoIdentidad = params.tipoDocumentoIdentidad
+    user.numeroDocumentoIdentidad = params.numeroDocumentoIdentidad
+    user.direccionHabitacion = params.direccionHabitacion
+    user.telefonoHabitacion = params.telefonoHabitacion
+    user.celularPersonal = params.celularPersonal
+    user.emailPersonal = params.emailPersonal
+    user.emailInstitucional = params.emailInstitucional
+    user.preferenciaAlimentaria = params.preferenciaAlimentaria
+    user.descripcionAlimentaria = params.descripcionAlimentaria
+    user.alergia = params.alergia
+    user.descripcionAlergia = params.descripcionAlergia
+    user.tipoOrganizacion = params.tipoOrganizacion
+    user.nombreOrganizacion = params.nombreOrganizacion
+    user.siglasOrganizacion = params.siglasOrganizacion
+    user.urlOrganizacion = params.urlOrganizacion
+    user.direccionOrganizacion = params.direccionOrganizacion
+    user.ciudadOrganizacion = params.ciudadOrganizacion
+    user.paisOrganizacion = params.paisOrganizacion
+    user.telefonoOrganizacion = params.telefonoOrganizacion
+    user.faxOrganizacion = params.faxOrganizacion
+    user.cargoOrganizacion = params.cargoOrganizacion
+    user.periodoCargoOrganizacion = params.periodoCargoOrganizacion
+    user.responsabilidadesOrganizacion = params.responsabilidadesOrganizacion
+    user.institucionEduacion = params.institucionEduacion
+    user.periodoEstudioEduacion = params.periodoEstudioEduacion
+    user.desdeEduacion = params.desdeEduacion
+    user.hastaEducacion = params.hastaEducacion
+    user.ciudadEduacion = params.ciudadEduacion
+    user.paisEduacion = params.paisEduacion
+    user.gradoAlcanzadoEduacion = params.gradoAlcanzadoEduacion
+    user.nombreEmergencia = params.nombreEmergencia
+    user.apellidoEmergencia = params.apellidoEmergencia
+    user.parentescoEmergencia = params.parentescoEmergencia
+    user.telefonoEmergencia = params.telefonoEmergencia
+    user.emailEmergencia = params.emailEmergencia
+    user.interesado = conferenciaId
+    user.participcionAnterior = params.participcionAnterior
+    user.anoParticipado = params.añoParticipado
+    user.trackParticipado = params.trackParticipado
+    user.expectativaTaller = params.expectativaTaller
+    user.ayudaEconomica = params.ayudaEconomica
+    user.justificacionEconomica = params.justificacionEconomica
+    user.password = params.password
+    user.telefono = params.telefono
+    user.profesion = params.profesion
+    user.empresa = params.empresa
+    user.preinscrito = "5d408e36e7179a064faae9db"
+    user.inscrito = "5d408e36e7179a064faae9db"
+    user.saldo = 0
+    user.rol = 'ROLE_USUARIO'
+    user.image = params.image
 
       User.find({
           $or: [
-              { email: user.email.toLowerCase() },
+              { emailPersonal: user.emailPersonal.toLowerCase() },
           ]
       }).exec((err, users) => {
           if (err) return res.status(500).send({ message: 'Error en la peticion de usuarios' });
@@ -86,10 +161,11 @@ function registrarYSeguir(req, res) {
                   user.password = hash;
 
                   user.save((err, userStored) => {
+                      console.log(err);
+                      
                       if (err) return res.status(500).send({ message: 'Error al guardar el usuario' });
 
                       if (userStored) {
-                        console.log(userStored);
                         
 
                         Conferencia.findByIdAndUpdate(conferenciaId, {$addToSet:{interesados: userStored._id}}, {new:true}, (err, confUpdate)=>{
@@ -108,7 +184,7 @@ function registrarYSeguir(req, res) {
           }
       });
   } else {
-      res.status(200).send({
+      res.status(400).send({
           message: 'Rellene todos los datos necesarios'
       });
   }
@@ -126,7 +202,8 @@ function getUser(req, res) {
 }
 
 function getUsers(req, res) {
-    User.find().exec((err, usuariosEncontrados) => {
+    User.find().populate('interesado').populate('preinscrito').populate('inscrito').exec((err, usuariosEncontrados) => {
+      
         if (err) return res.status(500).send({ message: 'error en la peticion' })
         if (!usuariosEncontrados) return res.status(400).send({ message: 'error en la busqueda de usuarios' })
 
@@ -140,10 +217,10 @@ function getUsers(req, res) {
 
 function login(req, res) {
     var params = req.body;
-    var email2 = params.email;
+    var email2 = params.emailPersonal;
     var password = params.password;
 
-    User.findOne({ email: email2 }, (err, user) => {
+    User.findOne({ emailPersonal: email2 }, (err, user) => {
         if (err) return res.status(500).send({ message: 'Error en la peticion' })
 
         if (user) {
@@ -526,13 +603,53 @@ function verificarEmail(req, res) {
 }
 
 function misConferencias(req, res) {
-    var userId = req.user.sub
+    var userId = req.user.sub;
+    var confesEnc
+    var tipoInscripcion = 0;
+    User.findById(userId).populate('interesado').populate('preinscrito').populate('inscrito').exec( (err, enc) => {
+      
+      
+      // Interesados Search
+      // if(enc.interesado._id !== '5d408e36e7179a064faae9db'){
+      //   confesEnc = enc.interesado
+        
+      //   tipoInscripcion = 1;
+      // }
+     
+        // PreInscritos Search
+        // if(enc.preinscrito._id !== '5d408e36e7179a064faae9db'){
+        //   confesEnc = enc.preinscrito
+        //   tipoInscripcion = 2;
+        // }
+        // Inscritos Search
+        // if(enc.inscrito._id !== '5d408e36e7179a064faae9db'){
+          
+        //   confesEnc = enc.inscrito
+        //   tipoInscripcion = 3;
+        // }
+      
 
-    Conferencia.find({ interesados: userId}, (err, enc) => {
         if (err) return res.status(500).send({ message: 'error en la petición' });
         if (!enc) return res.status(404).send({ message: 'no te has registrado a alguna conferencia ' });
+        return res.status(200).send({ miConfe: enc });
+        
+        // switch (tipoInscripcion) {
+        //   case 1:
+        //     return res.status(200).send({ interesados: confesEnc });
+        //     break;
+        //   case 2:            
+        //     return res.status(200).send({ preinscritos: confesEnc });
+        //     break;
+        //   case 3:
+        //     return res.status(200).send({ inscritos: confesEnc });
+        //     break;        
+        //   default:
+        //       return res.status(200).send({ nada: "no esta en ninguna" });
+        //     break;
+        // }
 
-        return res.status(200).send({ conferencias: enc })
+
+        
     })
 }
 
@@ -560,5 +677,6 @@ module.exports = {
     verificarEmail,
     eliminarUsuario,
     misConferencias,
-    registrarYSeguir
+    registrarYSeguir,
+    editSaldo
 }

@@ -29,6 +29,7 @@ api.post('/subir-imagen-usuario/:id', [md_auth.ensureAuth, md_subirUser], UserCo
 api.get('/obtener-imagen-usuario/:nombreImagen', UserController.obtenerImagen)
 api.put('/editar-usuario/:id', md_auth.ensureAuth, UserController.editarUsuario)
 api.put('/email/:correo/:codigo', UserController.verificarEmail)
+api.put('/editSaldo/:idUser', md_auth.ensureAuth, UserController.editSaldo);
 api.delete('/eliminar/:id', md_auth.ensureAuth, UserController.eliminarUsuario)
     //Conferencias
 api.get('/conferencia/listarAll', conferenciaController.listarCharlas);
@@ -38,7 +39,7 @@ api.post('/conferencia/registrar', conferenciaController.registrarCharla);
 api.post('/subir-imagen-conferencia/:id', [md_auth.ensureAuth, md_subirConf], conferenciaController.subirImagen);
 api.get('/obtener-imagen-conferencia/:nombreImagen', conferenciaController.obtenerImagen)
 api.put('/conferencia/editar/:id', md_auth.ensureAuth, conferenciaController.editarCharla)
-api.post('/conferencia/interesado/:id', md_auth.ensureAuth, conferenciaController.interesadosEnCharla)
+api.post('/conferencia/interesado/:id/:user', md_auth.ensureAuth, conferenciaController.interesadosEnCharla)
 api.post('/conferencia/inscribir/:id/:user', md_auth.ensureAuth, conferenciaController.inscribirEnCharla)
 api.post('/conferencia/preinscribir/:id/:user', md_auth.ensureAuth, conferenciaController.preinscribirEnCharla)
 api.put('/conferencia/registrado/:id/:color/:user', md_auth.ensureAuth, conferenciaController.cambiarColor)

@@ -59,7 +59,7 @@ function updatePatrocinador(req, res) {
 function deletePatrocinador(req, res) {
     var patId = req.params.id
 
-    Patrocinador.findByIdAndUpdate(patId, (err, enc) => {
+    Patrocinador.findByIdAndDelete(patId, (err, enc) => {
         if (err) return res.status(500).send({ message: 'error en patrocinador' })
         if (!enc) return res.status(400).send({ message: 'error al obtener el patrocinador' })
 
