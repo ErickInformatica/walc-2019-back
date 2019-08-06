@@ -11,64 +11,64 @@ const nodemailer = require('nodemailer');
 function editSaldo(req, res) {
   var idUser = req.params.idUser
   console.log(req.body);
-  
-  User.findByIdAndUpdate(idUser, {saldo: req.body.saldo}, (err, userUpd)=>{
+
+  User.findByIdAndUpdate(idUser, { saldo: req.body.saldo }, (err, userUpd) => {
     if (err) return res.status(500).send({ message: 'error en la peticion' });
     if (!userUpd) return res.status(404).send({ message: 'no se ha podido generar el cambio de saldo' });
     return res.status(200).send({ message: 'Monto Pagado Modificado' });
-    
+
   })
 }
 
 function registrar(req, res) {
-    var user = new User();
-    var params = req.body;
+  var user = new User();
+  var params = req.body;
 
-    if (params.nombre && params.email && params.password) {
-        user.nombre = params.nombre;
-        user.email = params.email;
-        user.telefono = params.telefono;
-        user.sexo = params.sexo;
-        user.profesion = params.profesion;
-        user.empresa = params.empresa;
-        user.interesados = params.interesado
-        user.preinscrito = params.preinscrito
-        user.inscrito= params.inscrito
-        user.rol = 'ROLE_USUARIO';
-        user.saldo = 0
-        user.image = null;
+  if (params.nombre && params.email && params.password) {
+    user.nombre = params.nombre;
+    user.email = params.email;
+    user.telefono = params.telefono;
+    user.sexo = params.sexo;
+    user.profesion = params.profesion;
+    user.empresa = params.empresa;
+    user.interesados = params.interesado
+    user.preinscrito = params.preinscrito
+    user.inscrito = params.inscrito
+    user.rol = 'ROLE_USUARIO';
+    user.saldo = 0
+    user.image = null;
 
 
-        User.find({
-            $or: [
-                { email: user.email.toLowerCase() },
-            ]
-        }).exec((err, users) => {
-            if (err) return res.status(500).send({ message: 'Error en la peticion de usuarios' });
+    User.find({
+      $or: [
+        { email: user.email.toLowerCase() },
+      ]
+    }).exec((err, users) => {
+      if (err) return res.status(500).send({ message: 'Error en la peticion de usuarios' });
 
-            if (users && users.length >= 1) {
-                return res.status(500).send({ message: 'El usuario ya existe' });
+      if (users && users.length >= 1) {
+        return res.status(500).send({ message: 'El usuario ya existe' });
+      } else {
+        bcrypt.hash(params.password, null, null, (err, hash) => {
+          user.password = hash;
+
+          user.save((err, userStored) => {
+            if (err) return res.status(500).send({ message: 'Error al guardar el usuario' });
+
+            if (userStored) {
+              res.status(200).send({ message: 'Usuario creado exitosamente' })
             } else {
-                bcrypt.hash(params.password, null, null, (err, hash) => {
-                    user.password = hash;
-
-                    user.save((err, userStored) => {
-                        if (err) return res.status(500).send({ message: 'Error al guardar el usuario' });
-
-                        if (userStored) {
-                            res.status(200).send({ message: 'Usuario creado exitosamente' })
-                        } else {
-                            res.status(404).send({ message: 'no se ha registrado el usuario' });
-                        }
-                    });
-                });
+              res.status(404).send({ message: 'no se ha registrado el usuario' });
             }
+          });
         });
-    } else {
-        res.status(200).send({
-            message: 'Rellene todos los datos necesarios'
-        });
-    }
+      }
+    });
+  } else {
+    res.status(200).send({
+      message: 'Rellene todos los datos necesarios'
+    });
+  }
 
 }
 
@@ -76,14 +76,14 @@ function registrarYSeguir(req, res) {
   var user = new User();
   var params = req.body;
   var conferenciaId = req.params.id
-  if(req.user){
+  if (req.user) {
     return res.status(500).send({ message: 'ya se encuentra asignado a un track' });
   }
   var fechaNacimientoYear = `${params.fechaNacimiento.year}/${params.fechaNacimiento.month}/${params.fechaNacimiento.day}`
   var fechaNacimientoMonth
   var fechaNacimientoDay
   console.log(fechaNacimientoYear);
-  
+
 
   if (params.emailPersonal && params.password) {
     user.primerApellido = params.primerApellido
@@ -147,196 +147,201 @@ function registrarYSeguir(req, res) {
     user.rol = 'ROLE_USUARIO'
     user.image = params.image
 
-      User.find({
-          $or: [
-              { emailPersonal: user.emailPersonal.toLowerCase() },
-          ]
-      }).exec((err, users) => {
-          if (err) return res.status(500).send({ message: 'Error en la peticion de usuarios' });
+    User.find({
+      $or: [
+        { emailPersonal: user.emailPersonal.toLowerCase() },
+      ]
+    }).exec((err, users) => {
+      if (err) return res.status(500).send({ message: 'Error en la peticion de usuarios' });
 
-          if (users && users.length >= 1) {
-              return res.status(500).send({ message: 'El usuario ya existe' });
-          } else {
-              bcrypt.hash(params.password, null, null, (err, hash) => {
-                  user.password = hash;
+      if (users && users.length >= 1) {
+        return res.status(500).send({ message: 'El usuario ya existe' });
+      } else {
+        bcrypt.hash(params.password, null, null, (err, hash) => {
+          user.password = hash;
 
-                  user.save((err, userStored) => {
-                      console.log(err);
-                      
-                      if (err) return res.status(500).send({ message: 'Error al guardar el usuario' });
+          user.save((err, userStored) => {
+            console.log(err);
 
-                      if (userStored) {
-                        
+            if (err) return res.status(500).send({ message: 'Error al guardar el usuario' });
 
-                        Conferencia.findByIdAndUpdate(conferenciaId, {$addToSet:{interesados: userStored._id}}, {new:true}, (err, confUpdate)=>{
-                          if (err) return res.status(500).send({ message: 'error en la peticion' });
+            if (userStored) {
 
-                          if (!confUpdate) return res.status(404).send({ message: 'no se ha podido generar una inscripcion' });
 
-                          return res.status(200).send({ message: 'Ha marcado interés en este evento' });
-                        })
+              Conferencia.findByIdAndUpdate(conferenciaId, { $addToSet: { interesados: userStored._id } }, { new: true }, (err, confUpdate) => {
+                if (err) return res.status(500).send({ message: 'error en la peticion' });
 
-                      } else {
-                          res.status(404).send({ message: 'no se ha registrado el usuario' });
-                      }
-                  });
-              });
-          }
-      });
+                if (!confUpdate) return res.status(404).send({ message: 'no se ha podido generar una inscripcion' });
+
+                return res.status(200).send({ message: 'Ha marcado interés en este evento' });
+              })
+
+            } else {
+              res.status(404).send({ message: 'no se ha registrado el usuario' });
+            }
+          });
+        });
+      }
+    });
   } else {
-      res.status(400).send({
-          message: 'Rellene todos los datos necesarios'
-      });
+    res.status(400).send({
+      message: 'Rellene todos los datos necesarios'
+    });
   }
 
 }
 
 function getUser(req, res) {
-    var userId = req.params.id;
+  var userId = req.params.id;
 
-    User.findById(userId, (err, usuarioEncontrado) => {
-        if (err) return res.status(500).send({ message: 'error en la peticion' })
-        if (!usuarioEncontrado) return res.status(400).send({ message: 'error en la busqueda del usuario' })
-        return res.status(200).send({ user: usuarioEncontrado })
-    })
+  User.findById(userId, (err, usuarioEncontrado) => {
+    if (err) return res.status(500).send({ message: 'error en la peticion' })
+    if (!usuarioEncontrado) return res.status(400).send({ message: 'error en la busqueda del usuario' })
+    return res.status(200).send({ user: usuarioEncontrado })
+  })
 }
 
 function getUsers(req, res) {
-    User.find().populate('interesado').populate('preinscrito').populate('inscrito').exec((err, usuariosEncontrados) => {
-      
-        if (err) return res.status(500).send({ message: 'error en la peticion' })
-        if (!usuariosEncontrados) return res.status(400).send({ message: 'error en la busqueda de usuarios' })
+  User.find().populate('interesado').populate('preinscrito').populate('inscrito').exec((err, usuariosEncontrados) => {
 
-        for (let i = 0; i < usuariosEncontrados.length; i++) {
-            delete usuariosEncontrados[i].password
-        }
+    if (err) return res.status(500).send({ message: 'error en la peticion' })
+    if (!usuariosEncontrados) return res.status(400).send({ message: 'error en la busqueda de usuarios' })
 
-        return res.status(200).send({ usuarios: usuariosEncontrados })
-    })
+    for (let i = 0; i < usuariosEncontrados.length; i++) {
+      delete usuariosEncontrados[i].password
+    }
+
+    return res.status(200).send({ usuarios: usuariosEncontrados })
+  })
 }
 
 function login(req, res) {
-    var params = req.body;
-    var email2 = params.emailPersonal;
-    var password = params.password;
+  var params = req.body;
+  var email2 = params.emailPersonal;
+  var password = params.password;
 
-    User.findOne({ emailPersonal: email2 }, (err, user) => {
-        if (err) return res.status(500).send({ message: 'Error en la peticion' })
+  User.findOne({ emailPersonal: email2 }, (err, user) => {
+    if (err) return res.status(500).send({ message: 'Error en la peticion' })
 
-        if (user) {
-            bcrypt.compare(password, user.password, (err, check) => {
-                if (check) {
-                    if (params.gettoken) {
-                        return res.status(200).send({
-                            token: jwt.createToken(user)
-                        })
-                    } else {
-                        user.password = undefined;
-                        return res.status(200).send({ user })
-                    }
-                } else {
-                    return res.status(404).send({ message: 'el usuario no se a podido identificar' })
-                }
-            });
+    if (user) {
+      bcrypt.compare(password, user.password, (err, check) => {
+        if (check) {
+          if (params.gettoken) {
+            user.password = undefined;
+            user.image = undefined
+            console.log(user);
+            
+            return res.status(200).send({
+
+              token: jwt.createToken(user)
+            })
+          } else {
+            user.password = undefined;
+            return res.status(200).send({ user })
+          }
         } else {
-            return res.status(404).send({ message: 'el usuairo no se a podido logear' })
+          return res.status(404).send({ message: 'el usuario no se a podido identificar' })
         }
-    });
+      });
+    } else {
+      return res.status(404).send({ message: 'el usuairo no se a podido logear' })
+    }
+  });
 }
 
 function subirImagen(req, res) {
-    var userId = req.params.id;
+  var userId = req.params.id;
 
-    if (req.files) {
-        var file_path = req.files.image.path;
-        console.log(file_path);
+  if (req.files) {
+    var file_path = req.files.image.path;
+    console.log(file_path);
 
-        var file_split = file_path.split('\\');
-        console.log(file_split);
+    var file_split = file_path.split('\\');
+    console.log(file_split);
 
-        var file_name = file_split[3];
-        console.log(file_name);
+    var file_name = file_split[3];
+    console.log(file_name);
 
-        var ext_split = file_name.split('\.');
-        console.log(ext_split);
+    var ext_split = file_name.split('\.');
+    console.log(ext_split);
 
-        var file_ext = ext_split[1];
-        console.log(file_ext);
+    var file_ext = ext_split[1];
+    console.log(file_ext);
 
-        if (file_ext == 'png' || file_ext == 'jpg' || file_ext == 'jpeg' || file_ext == 'gif') {
-            User.findByIdAndUpdate(userId, { image: file_name }, { new: true }, (err, usuarioActualizado) => {
-                if (err) return res.status(500).send({ message: ' no se a podido actualizar el usuario' })
+    if (file_ext == 'png' || file_ext == 'jpg' || file_ext == 'jpeg' || file_ext == 'gif') {
+      User.findByIdAndUpdate(userId, { image: file_name }, { new: true }, (err, usuarioActualizado) => {
+        if (err) return res.status(500).send({ message: ' no se a podido actualizar el usuario' })
 
-                if (!usuarioActualizado) return res.status(404).send({ message: 'error en los datos del usuario, no se pudo actualizar' })
+        if (!usuarioActualizado) return res.status(404).send({ message: 'error en los datos del usuario, no se pudo actualizar' })
 
-                return res.status(200).send({ user: usuarioActualizado });
-            })
-        } else {
-            return removeFilesOfUploads(res, file_path, 'extension no valida')
-        }
-
+        return res.status(200).send({ user: usuarioActualizado });
+      })
+    } else {
+      return removeFilesOfUploads(res, file_path, 'extension no valida')
     }
+
+  }
 }
 
 function removeFilesOfUploads(res, file_path, message) {
-    fs.unlink(file_path, (err) => {
-        return res.status(200).send({ message: message })
-    })
+  fs.unlink(file_path, (err) => {
+    return res.status(200).send({ message: message })
+  })
 }
 
 function obtenerImagen(req, res) {
-    var image_file = req.params.nombreImagen;
-    var path_file = './src/uploads/users/' + image_file;
+  var image_file = req.params.nombreImagen;
+  var path_file = './src/uploads/users/' + image_file;
 
-    fs.exists(path_file, (exists) => {
-        if (exists) {
-            res.sendFile(path.resolve(path_file));
-        } else {
-            res.status(200).send({ message: 'no existe la imagen' })
-        }
-    });
+  fs.exists(path_file, (exists) => {
+    if (exists) {
+      res.sendFile(path.resolve(path_file));
+    } else {
+      res.status(200).send({ message: 'no existe la imagen' })
+    }
+  });
 }
 
 function editarUsuario(req, res) {
-    var userId = req.params.id;
-    var params = req.body;
+  var userId = req.params.id;
+  var params = req.body;
 
-    //BORRAR LA PROPIEDAD DE PASSWORD
-    delete params.password;
+  //BORRAR LA PROPIEDAD DE PASSWORD
+  delete params.password;
 
-    if (userId != req.user.sub) {
-        return res.status(500).send({ message: 'no tiene los permisos para actualizar los datos de este usuario' })
-    }
+  if (userId != req.user.sub) {
+    return res.status(500).send({ message: 'no tiene los permisos para actualizar los datos de este usuario' })
+  }
 
-    User.findByIdAndUpdate(userId, params, { new: true }, (err, usuarioActualizado) => {
-        if (err) return res.status(500).send({ message: 'error en la peticion' })
+  User.findByIdAndUpdate(userId, params, { new: true }, (err, usuarioActualizado) => {
+    if (err) return res.status(500).send({ message: 'error en la peticion' })
 
-        if (!usuarioActualizado) return res.status(404).send({ message: 'no se a podido actualizar los datos del usuario' })
+    if (!usuarioActualizado) return res.status(404).send({ message: 'no se a podido actualizar los datos del usuario' })
 
-        return res.status(200).send({ user: usuarioActualizado })
-    })
+    return res.status(200).send({ user: usuarioActualizado })
+  })
 }
 
 
 function verificarEmail(req, res) {
-    var correo = req.params.correo;
-    var result = req.params.codigo;
+  var correo = req.params.correo;
+  var result = req.params.codigo;
 
-    var transporter = nodemailer.createTransport({
-        service: "gmail",
+  var transporter = nodemailer.createTransport({
+    service: "gmail",
 
-        secure: false, // true for 465, false for other ports
-        auth: {
-            user: `noreplykinal@gmail.com`, // Cambialo por tu email
-            pass: `encriptado2019` // Cambialo por tu password
-        }
-    });
+    secure: false, // true for 465, false for other ports
+    auth: {
+      user: `noreplykinal@gmail.com`, // Cambialo por tu email
+      pass: `encriptado2019` // Cambialo por tu password
+    }
+  });
 
-    const mailOptions = {
-        from: `"Kinal no reply" `,
-        to: `"${correo}"`, // Cambia esta parte por el destinatario
-        subject: `Codigo de verificación`,
-        html: `<html style="width:100%;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;padding:0;Margin:0;"><head> 
+  const mailOptions = {
+    from: `"Kinal no reply" `,
+    to: `"${correo}"`, // Cambia esta parte por el destinatario
+    subject: `Codigo de verificación`,
+    html: `<html style="width:100%;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;padding:0;Margin:0;"><head> 
         <meta charset="UTF-8"> 
         <meta content="width=device-width, initial-scale=1" name="viewport"> 
         <meta name="x-apple-disable-message-reformatting"> 
@@ -463,7 +468,7 @@ function verificarEmail(req, res) {
                            </tr> 
                            <tr style="border-collapse:collapse;"> 
                                </tr><tr style="border-collapse:collapse;"> 
-                            <td align="left" style="padding:0;Margin:0;padding-left:40px;padding-right:40px;"> <h1 style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:16px;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:24px;color:#666666;text-align:center;"><font style="vertical-align:inherit;"><font style="vertical-align:inherit;"><font style="vertical-align:inherit;"><font style="vertical-align:inherit;"> ${ result }</font></font></font></font></h1> </td> 
+                            <td align="left" style="padding:0;Margin:0;padding-left:40px;padding-right:40px;"> <h1 style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:16px;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:24px;color:#666666;text-align:center;"><font style="vertical-align:inherit;"><font style="vertical-align:inherit;"><font style="vertical-align:inherit;"><font style="vertical-align:inherit;"> ${ result}</font></font></font></font></h1> </td> 
                            </tr> 
                             <tr><td align="center" style="padding:0;Margin:0;padding-top:25px;padding-left:40px;padding-right:40px;"> <p style="Margin:0;-webkit-text-size-adjust:none;-ms-text-size-adjust:none;mso-line-height-rule:exactly;font-size:16px;font-family:helvetica, 'helvetica neue', arial, verdana, sans-serif;line-height:24px;color:#666666;"><font style="vertical-align:inherit;"><font style="vertical-align:inherit;"><font style="vertical-align:inherit;"><font style="vertical-align:inherit;">Tome en cuenta que el usuario no se creará hasta la confirmación del email</font></font></font></font></p> </td> 
                            </tr> 
@@ -592,91 +597,55 @@ function verificarEmail(req, res) {
       </body>
     </html>
 `
-    };
-    transporter.sendMail(mailOptions, function(err, info) {
-        if (err)
-            console.log(err)
-        else
-            console.log(info);
-        res.status(200).send({ message: 'Revise su bandeja de correo por favor, en caso de no encontrarlo, revice "SPAM"' });
-    });
+  };
+  transporter.sendMail(mailOptions, function (err, info) {
+    if (err)
+      console.log(err)
+    else
+      console.log(info);
+    res.status(200).send({ message: 'Revise su bandeja de correo por favor, en caso de no encontrarlo, revice "SPAM"' });
+  });
 }
 
 function misConferencias(req, res) {
-    var userId = req.user.sub;
-    var confesEnc
-    var tipoInscripcion = 0;
-    User.findById(userId).populate('interesado').populate('preinscrito').populate('inscrito').exec( (err, enc) => {
-      
-      
-      // Interesados Search
-      // if(enc.interesado._id !== '5d408e36e7179a064faae9db'){
-      //   confesEnc = enc.interesado
-        
-      //   tipoInscripcion = 1;
-      // }
-     
-        // PreInscritos Search
-        // if(enc.preinscrito._id !== '5d408e36e7179a064faae9db'){
-        //   confesEnc = enc.preinscrito
-        //   tipoInscripcion = 2;
-        // }
-        // Inscritos Search
-        // if(enc.inscrito._id !== '5d408e36e7179a064faae9db'){
-          
-        //   confesEnc = enc.inscrito
-        //   tipoInscripcion = 3;
-        // }
-      
+  var userId = req.user.sub;
+  var tipoInscripcion = 0;
+  User.findById(userId).populate('interesado').populate('preinscrito').populate('inscrito').exec((err, enc) => {
 
-        if (err) return res.status(500).send({ message: 'error en la petición' });
-        if (!enc) return res.status(404).send({ message: 'no te has registrado a alguna conferencia ' });
-        return res.status(200).send({ miConfe: enc });
-        
-        // switch (tipoInscripcion) {
-        //   case 1:
-        //     return res.status(200).send({ interesados: confesEnc });
-        //     break;
-        //   case 2:            
-        //     return res.status(200).send({ preinscritos: confesEnc });
-        //     break;
-        //   case 3:
-        //     return res.status(200).send({ inscritos: confesEnc });
-        //     break;        
-        //   default:
-        //       return res.status(200).send({ nada: "no esta en ninguna" });
-        //     break;
-        // }
+    console.log(enc);
+
+    if (err) return res.status(500).send({ message: 'error en la petición' });
+    if (!enc) return res.status(404).send({ message: 'no te has registrado a alguna conferencia ' });
+    return res.status(200).send({ miConfe: enc });
 
 
-        
-    })
+  })
 }
 
 function eliminarUsuario(req, res) { //RECORDATORIO: hacer el eliminar al usuario de las charlas en las que se inscribió
-    var userId = req.params.id
+  var userId = req.params.id
 
-    if (req.user.rol != 'ADMIN') return res.status(200).send({ message: 'No eres administrador, no puedes eliminar usuarios' })
+  if (req.user.rol != 'ADMIN') return res.status(200).send({ message: 'No eres administrador, no puedes eliminar usuarios' })
 
-    User.findByIdAndDelete(userId, (err, eliminado) => {
-        if (err) return res.status(500).send({ message: 'error en la petición' });
-        if (!eliminado) return res.status(404).send({ message: 'no existe el usuario' });
+  User.findByIdAndDelete(userId, (err, eliminado) => {
+    if (err) return res.status(500).send({ message: 'error en la petición' });
+    if (!eliminado) return res.status(404).send({ message: 'no existe el usuario' });
 
-        return res.status(200).send({ message: 'Usuario Eliminado' })
-    })
+    return res.status(200).send({ message: 'Usuario Eliminado' })
+  })
 }
 
 module.exports = {
-    registrar,
-    login,
-    subirImagen,
-    obtenerImagen,
-    editarUsuario,
-    getUser,
-    getUsers,
-    verificarEmail,
-    eliminarUsuario,
-    misConferencias,
-    registrarYSeguir,
-    editSaldo
+  registrar,
+  login,
+  subirImagen,
+  obtenerImagen,
+  editarUsuario,
+  getUser,
+  getUsers,
+  verificarEmail,
+  eliminarUsuario,
+  misConferencias,
+  registrarYSeguir,
+  editSaldo
 }
