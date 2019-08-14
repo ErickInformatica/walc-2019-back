@@ -10,7 +10,6 @@ const nodemailer = require('nodemailer');
 
 function editSaldo(req, res) {
   var idUser = req.params.idUser
-  console.log(req.body);
 
   User.findByIdAndUpdate(idUser, { saldo: req.body.saldo }, (err, userUpd) => {
     if (err) return res.status(500).send({ message: 'error en la peticion' });
@@ -82,7 +81,6 @@ function registrarYSeguir(req, res) {
   var fechaNacimientoYear = `${params.fechaNacimiento.year}/${params.fechaNacimiento.month}/${params.fechaNacimiento.day}`
   var fechaNacimientoMonth
   var fechaNacimientoDay
-  console.log(fechaNacimientoYear);
 
 
   if (params.emailPersonal && params.password) {
@@ -161,7 +159,6 @@ function registrarYSeguir(req, res) {
           user.password = hash;
 
           user.save((err, userStored) => {
-            console.log(err);
 
             if (err) return res.status(500).send({ message: 'Error al guardar el usuario' });
 
@@ -229,7 +226,6 @@ function login(req, res) {
           if (params.gettoken) {
             user.password = undefined;
             user.image = undefined
-            console.log(user);
             
             return res.status(200).send({
 
@@ -308,10 +304,7 @@ function editarUsuario(req, res) {
 
   //BORRAR LA PROPIEDAD DE PASSWORD
   delete params.password;
-
-  if (userId != req.user.sub) {
-    return res.status(500).send({ message: 'no tiene los permisos para actualizar los datos de este usuario' })
-  }
+  delete params.image;
 
   User.findByIdAndUpdate(userId, params, { new: true }, (err, usuarioActualizado) => {
     if (err) return res.status(500).send({ message: 'error en la peticion' })
@@ -612,7 +605,6 @@ function misConferencias(req, res) {
   var tipoInscripcion = 0;
   User.findById(userId).populate('interesado').populate('preinscrito').populate('inscrito').exec((err, enc) => {
 
-    console.log(enc);
 
     if (err) return res.status(500).send({ message: 'error en la petición' });
     if (!enc) return res.status(404).send({ message: 'no te has registrado a alguna conferencia ' });
